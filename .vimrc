@@ -3,21 +3,36 @@
 "set t_kb = 
 "set t_kD = 
 
-set nocompatible               " be iMproved
-filetype off                   " required!
+if &compatible
+  set nocompatible
+endif
+set runtimepath+=~/.vim/dein/repos/github.com/Shougo/dein.vim
 
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
+if dein#load_state(expand('~/.vim/dein'))
+  call dein#begin(expand('~/.vim/dein'))
+  call dein#add('Shougo/dein.vim')
+  call dein#add('gmarik/Vundle.vim')
+  call dein#add('Shougo/neocomplcache')
+  call dein#add('mattn/zencoding-vim')
+  call dein#add('plasticboy/vim-markdown')
+  call dein#add('kchmck/vim-coffee-script')
+  call dein#add('thinca/vim-quickrun')
+  call dein#add('cakebaker/scss-syntax.vim')
+  call dein#add('altercation/vim-colors-solarized')
+  call dein#add('itchyny/lightline.vim')
+  call dein#add('mattn/emmet-vim')
+  call dein#add('fatih/vim-go')
 
-"Plugin Installing
-Bundle 'gmarik/vundle'
-Bundle 'Shougo/neocomplcache'
-Bundle 'mattn/zencoding-vim'
-Bundle 'plasticboy/vim-markdown'
-Bundle 'kchmck/vim-coffee-script'
-Bundle 'thinca/vim-quickrun'
-Bundle 'cakebaker/scss-syntax.vim'
-filetype plugin indent on     " required!
+  call dein#end()
+  call dein#save_state()
+endif
+
+if dein#check_install()
+  call dein#install()
+endif
+
+filetype plugin indent on
+syntax enable
 
 "neocomplcache
 let g:acp_enableAtStartup = 0
@@ -59,6 +74,11 @@ let g:neocomplcache_omni_patterns.cpp = '\h\w*\%(\.\|->\)\h\w*\|\h\w*::'
 let g:quickrun_config = {}
 let g:quickrun_config['coffee'] = {'command' : 'coffee', 'exec' : ['%c -cp %s']}
 
+syntax enable
+set background=dark
+colorscheme solarized
+"colorscheme peachpuff
+
 hi Pmenu guibg=#f5f5dc guifg=#000000
 hi PmenuSel guibg=#0000ff guifg=#ffffff
 hi PmenuSbar guibg=#aaaaaa
@@ -66,55 +86,6 @@ hi PmenuThumb guifg=#0000ff
 
 "
 noremap!  <BS>
-
-if &encoding !=# 'utf-8'
-	set encoding=japan
-	set fileencoding=japan
-endif
-if has('iconv')
-	let s:enc_euc = 'euc-jp'
-	let s:enc_jis = 'iso-2022-jp'
-	if iconv("\x87\x64\x87\x6a", 'cp932', 'eucjp-ms') ==# "\xad\xc5\xad\xcb"
-		let s:enc_euc = 'eucjp-ms'
-		let s:enc_jis = 'iso-2022-jp-3'
-	elseif iconv("\x87\x64\x87\x6a", 'cp932', 'euc-jisx0213') ==# "\xad\xc5\xad\xcb"
-		let s:enc_euc = 'euc-jisx0213'
-		let s:enc_jis = 'iso-2022-jp-3'
-	endif
-	if &encoding ==# 'utf-8'
-		let s:fileencodings_default = &fileencodings
-		let &fileencodings = s:enc_jis .','. s:enc_euc .',cp932'
-		let &fileencodings = &fileencodings .','. s:fileencodings_default
-		unlet s:fileencodings_default
-	else
-		let &fileencodings = &fileencodings .','. s:enc_jis
-		set fileencodings+=utf-8,ucs-2le,ucs-2
-		if &encoding =~# '^\(euc-jp\|euc-jisx0213\|eucjp-ms\)$'
-			set fileencodings+=cp932
-			set fileencodings-=euc-jp
-			set fileencodings-=euc-jisx0213
-			set fileencodings-=eucjp-ms
-			let &encoding = s:enc_euc
-			let &fileencoding = s:enc_euc
-		else
-			let &fileencodings = &fileencodings .','. s:enc_euc
-		endif
-	endif
-	unlet s:enc_euc
-	unlet s:enc_jis
-endif
-if has('autocmd')
-	function! AU_ReCheck_FENC()
-		if &fileencoding =~# 'iso-2022-jp' && search("[^\x01-\x7e]", 'n') == 0
-			let &fileencoding=&encoding
-		endif
-	endfunction
-	autocmd BufReadPost * call AU_ReCheck_FENC()
-endif
-set fileformats=unix,dos,mac
-if exists('&ambiwidth')
-	set ambiwidth=double
-endif
 
 "-----------------------------------------------------------------------------
 "
@@ -166,3 +137,32 @@ nnoremap k gk
 map <kPlus> <C-W>+
 map <kMinus> <C-W>-
 
+let g:lightline = {
+      \ 'colorscheme': 'wombat',
+      \ }
+
+let g:user_emmet_settings = {
+    \   'lang' : 'ja'
+    \ }
+
+" :Fmt などで gofmt の代わりに goimports を使う
+let g:gofmt_command = 'goimports'
+
+" Go に付属の plugin と gocode を有効にする
+set rtp^=${GOROOT}/misc/vim
+set rtp^=${GOPATH}/src/github.com/nsf/gocode/vim
+
+" 保存時に :Fmt する
+au BufWritePre *.go Fmt
+au BufNewFile,BufRead *.go set sw=4 noexpandtab ts=4
+au FileType go compiler go
+
+let g:go_bin_path = expand("~/.go/bin")
+set completeopt=menu,preview
+au FileType go nmap <Leader>i <Plug>(go-info)
+au FileType go nmap <Leader>gd <Plug>(go-doc)
+au FileType go nmap <Leader>gv <Plug>(go-doc-vertical)
+au FileType go nmap <Leader>gb <Plug>(go-doc-browser)
+au FileType go nmap <leader>r <Plug>(go-run)
+au FileType go nmap <leader>b <Plug>(go-build)
+au FileType go nmap <leader>t <Plug>(go-test)
